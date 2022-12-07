@@ -1,0 +1,6 @@
+*/.DS_store
+*.DS_store
+Logs
+COMET
+*/__pycache__
+__pycache__
