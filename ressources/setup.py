@@ -298,7 +298,7 @@ def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves, times=times
     graph.attr('node', shape="box", style="rounded")
     for i in range(Nsteps):
         pl=f"\nPlasma {plasma[i]} W" if plasma[i]>0 else ""
-        init = f'{i+1} - {" + ".join(valves[i])}\n{times[i]} s{pl}'
+        init = f'{i+1}. {" + ".join(valves[i])}\n{times[i]} s{pl}'
         if plasma[i]>0 and highlight==-1:
             graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
         elif highlight>=0 and i==(highlight):
@@ -322,9 +322,6 @@ def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", initg
     """
     Definition of recipe
     """
-    for v in valves:
-        if len(v)==0:
-            st.warning("**!! A step contains no gas input, check it's not an error. !!**")
     initialize(initgas=initgas, wait=wait, valves=valves, times=times, plasma=plasma)
     start_time = datetime.now().strftime(f"%Y-%m-%d-%H:%M:%S")
     st.session_state['start_time'] = start_time

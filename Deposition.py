@@ -52,4 +52,12 @@ if GObutton:
 # Show recipe graph
 # # # # # # # # # # # # # # # # # # # # # # # #
 
+allsteps=[initgas]+valves
+for i in range(len(allsteps)):
+    if len(allsteps[i])==0:
+        if i==0:
+            st.warning("**!! Initialization with no gas input, check it's not an error. !!**")
+        else:
+            st.warning(f"**!! Step {i} with no gas input, check it's not an error. !!**")
+
 showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, times=times, Nsteps=Nsteps)
