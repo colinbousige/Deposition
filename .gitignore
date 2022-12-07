@@ -1,6 +1,4 @@
-*/.DS_store
-*.DS_store
+**/.DS_store
+**/__pycache__
 Logs
 COMET
-*/__pycache__
-__pycache__

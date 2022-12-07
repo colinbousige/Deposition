@@ -1,13 +1,9 @@
-import math
 import streamlit as st
-import time
 from datetime import datetime, timedelta
 from dateutil import parser
 from ressources.setup import *
-import graphviz
 
 framework()
-# initialize()
 
 col1, col2 = st.sidebar.columns(2)
 initgas = col1.multiselect(f"Initial gas in:", ['Ar', 'H2'], ["Ar"])

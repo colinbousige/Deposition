@@ -3,7 +3,7 @@ import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
-# import smbus
+import smbus
 import ressources.citobase as cb
 from tempfile import mkstemp
 from shutil import move, copymode
@@ -32,7 +32,7 @@ st.set_page_config(
 
 # Relays from the hat are commanded with I2C
 DEVICE_BUS = 1
-# bus = smbus.SMBus(DEVICE_BUS)
+bus = smbus.SMBus(DEVICE_BUS)
 
 # Default precursor names
 default = {"N": 100,
@@ -78,11 +78,11 @@ def turn_ON(gas):
     Open relay from the hat with I2C command
     """
     DEVICE_ADDR, rel = relays[gas]
-    print(f"ON - {gas}")
-    # if gas != "Ar":
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
-    # else:
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
+    # print(f"ON - {gas}")
+    if gas != "Ar":
+        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
+    else:
+        bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
 
 
 def turn_OFF(gas):
@@ -90,11 +90,11 @@ def turn_OFF(gas):
     Close relay from the hat with I2C command
     """
     DEVICE_ADDR, rel = relays[gas]
-    print(f"OFF - {gas}")
-    # if gas != "Ar":
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
-    # else:
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
+    # print(f"OFF - {gas}")
+    if gas != "Ar":
+        bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
+    else:
+        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
 
 
 def set_plasma(plasma, logname=None):
@@ -118,7 +118,7 @@ def HV_ON():
     """
     Turn HV on
     """
-    print(f"Plasma ON")
+    # print(f"Plasma ON")
     if citoctrl.open():
         citoctrl.set_rf_on()
 
@@ -127,7 +127,7 @@ def HV_OFF():
     """
     Turn HV off
     """
-    print(f"Plasma OFF")
+    # print(f"Plasma OFF")
     if citoctrl.open():
         citoctrl.set_rf_off()  # turn off the rf
 
