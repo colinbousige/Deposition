@@ -336,14 +336,15 @@ def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD",
     st.session_state['start_time'] = start_time
     st.session_state['logname'] = f"Logs/{start_time}_{recipe}.txt"
     st.session_state['cycle_time'] = (tot-waitf-wait)/N
-    stepslog = ["  - %-13s%lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
-    stepslog = [f"  - Initialization: {' + '.join(initgas)}, {wait} s"] + stepslog
-    stepslog = stepslog + [f"  - Finalization: {' + '.join(fingas)}, {waitf} s"]
+    stepslog = ["    - %-11s%.3lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
+    stepslog = [f"  - Init.:       {' + '.join(initgas)}, {wait} s"] + stepslog
+    stepslog = stepslog + [f"  - Final.:      {' + '.join(fingas)}, {waitf} s"]
     stepslog = "\n"+"\n".join(stepslog)
     write_to_log(st.session_state['logname'], recipe=recipe, start=start_time,
                  steps=stepslog, N=N, time_per_cycle=timedelta(seconds=st.session_state['cycle_time']))
     initialize(initgas=initgas, wait=wait, valves=valves, times=times, 
                plasma=plasma, tot=tot, N=N)
+    tot = tot - wait
     for i in range(N):
         for step in range(len(times)):
             remcycletext.write("# Cycle number:\n")
