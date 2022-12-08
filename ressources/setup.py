@@ -3,7 +3,7 @@ import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
-import smbus
+# import smbus
 import ressources.citobase as cb
 from tempfile import mkstemp
 from shutil import move, copymode
@@ -32,7 +32,7 @@ st.set_page_config(
 
 # Relays from the hat are commanded with I2C
 DEVICE_BUS = 1
-bus = smbus.SMBus(DEVICE_BUS)
+# bus = smbus.SMBus(DEVICE_BUS)
 
 # Default precursor names
 default = {"N": 100,
@@ -79,10 +79,10 @@ def turn_ON(gas):
     """
     DEVICE_ADDR, rel = relays[gas]
     # print(f"ON - {gas}")
-    if gas != "Ar":
-        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
-    else:
-        bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
+    # if gas != "Ar":
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
+    # else:
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
 
 
 def turn_OFF(gas):
@@ -91,10 +91,10 @@ def turn_OFF(gas):
     """
     DEVICE_ADDR, rel = relays[gas]
     # print(f"OFF - {gas}")
-    if gas != "Ar":
-        bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
-    else:
-        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
+    # if gas != "Ar":
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
+    # else:
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
 
 
 def set_plasma(plasma, logname=None):
@@ -132,7 +132,8 @@ def HV_OFF():
         citoctrl.set_rf_off()  # turn off the rf
 
 
-def initialize(initgas=["Ar"], wait=-1, valves=valves, times=times, plasma=plasma):
+def initialize(initgas=["Ar"], wait=-1, valves=valves, times=times, 
+               plasma=plasma, tot=10, N=100):
     """
     Make sure the relays are closed
     """
@@ -148,8 +149,12 @@ def initialize(initgas=["Ar"], wait=-1, valves=valves, times=times, plasma=plasm
                 turn_ON(gas)
     if wait>0:
         showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
-                  times=times, Nsteps=len(times), highlight=-10)
-        countdown(wait, wait)
+                  times=times, Nsteps=len(times), highlight=-2, N=N)
+        remcycletext.write("# Cycle number:\n")
+        remcycle.markdown(f"<div><h2><span class='highlight green'>0 / {N}</h2></span></div>",
+                            unsafe_allow_html=True)
+        remcyclebar.progress(int((0)/N*100))
+        countdown(wait, tot)
 
 
 def append_to_file(logfile="log.txt", text=""):
@@ -292,25 +297,28 @@ def print_step(n, steps):
     step_print.markdown(annotated_steps, unsafe_allow_html=True)
 
 
-def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves, times=times, Nsteps=4, highlight=-1):
+def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves, 
+              times=times, Nsteps=4, highlight=-1, N=N):
     graph = graphviz.Digraph()
     graph.attr(layout="circo", rankdir='LR')
     graph.attr('node', shape="box", style="rounded")
+    graph.attr(label=f'                                          Repeat {N} times')
+    if highlight==-2:
+        graph.node("A",f"{' + '.join(initgas)}\n{wait} s", 
+                   style='rounded,filled', fillcolor="lightseagreen")
+    else:
+        graph.node("A",f"{' + '.join(initgas)}\n{wait} s")
     for i in range(Nsteps):
         pl=f"\nPlasma {plasma[i]} W" if plasma[i]>0 else ""
         init = f'{i+1}. {" + ".join(valves[i])}\n{times[i]} s{pl}'
         if plasma[i]>0 and highlight==-1:
             graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
-        elif highlight>=0 and i==(highlight):
+        elif highlight>=0 and i==highlight and plasma[i]==0:
             graph.node(str(i), init, style='rounded,filled', fillcolor="lightseagreen")
+        elif highlight>=0 and i==highlight and plasma[i]>0:
+            graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
         else:
             graph.node(str(i), init)
-    if highlight<-1:
-        graph.node("A",f"{' + '.join(initgas)}\n{wait} s", 
-                   style='rounded,filled', fillcolor="lightseagreen")
-    else:
-        graph.node("A",f"{' + '.join(initgas)}\n{wait} s")
-    graph.attr(label=f'Repeat {N} times                                           ')
     graph.edges(["A0"]+[f"{i}{(i+1)%(Nsteps)}" for i in range(Nsteps)])
     step_print.graphviz_chart(graph)
 
@@ -318,25 +326,28 @@ def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves, times=times
 #  RECIPE DEFINITIONS
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", initgas=["Ar"], wait=30):
+def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", 
+           initgas=["Ar"], wait=30, fingas=["Ar"], waitf=30):
     """
     Definition of recipe
     """
-    initialize(initgas=initgas, wait=wait, valves=valves, times=times, plasma=plasma)
+    tot = sum(times)*N+wait+waitf
     start_time = datetime.now().strftime(f"%Y-%m-%d-%H:%M:%S")
     st.session_state['start_time'] = start_time
     st.session_state['logname'] = f"Logs/{start_time}_{recipe}.txt"
-    tot = sum(times)*N
-    st.session_state['cycle_time'] = tot/N
+    st.session_state['cycle_time'] = (tot-waitf-wait)/N
     stepslog = ["  - %-13s%lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
-    stepslog="\n"+"\n".join(stepslog)
+    stepslog = [f"  - Initialization: {' + '.join(initgas)}, {wait} s"] + stepslog
+    stepslog = stepslog + [f"  - Finalization: {' + '.join(fingas)}, {waitf} s"]
+    stepslog = "\n"+"\n".join(stepslog)
     write_to_log(st.session_state['logname'], recipe=recipe, start=start_time,
                  steps=stepslog, N=N, time_per_cycle=timedelta(seconds=st.session_state['cycle_time']))
+    initialize(initgas=initgas, wait=wait, valves=valves, times=times, 
+               plasma=plasma, tot=tot, N=N)
     for i in range(N):
         for step in range(len(times)):
             remcycletext.write("# Cycle number:\n")
-            remcycle.markdown("<div><h2><span class='highlight green'>" +
-                                str(i+1)+" / "+str(N)+"</h2></span></div>",
+            remcycle.markdown(f"<div><h2><span class='highlight green'>{i+1} / {N}</h2></span></div>",
                                 unsafe_allow_html=True)
             remcyclebar.progress(int((i+1)/N*100))
             # Steps
@@ -345,7 +356,7 @@ def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", initg
             if plasma[step]>0:
                 set_plasma(plasma[step])
                 HV_ON()
-            showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
+            showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, N=N,
                       times=times, Nsteps=len(times), highlight=step)
             countdown(times[step], tot)
             tot = tot-times[step]
@@ -355,6 +366,12 @@ def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", initg
             if plasma[step]>0:
                 HV_OFF()
         update_cycle(st.session_state['logname'], i, N)
+    showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, N=N,
+              times=times, Nsteps=len(times), highlight=-1)
+    for v in fingas:
+        turn_ON(v)
+    remcycletext.write("# Finalization....\n")
+    countdown(waitf, tot)
     end_time = datetime.now().strftime(f"%Y-%m-%d-%H:%M:%S")
     st.balloons()
     time.sleep(2)

@@ -1,18 +1,21 @@
 import streamlit as st
+import pandas as pd
 from datetime import datetime, timedelta
 from dateutil import parser
 from ressources.setup import *
 
 framework()
 
+st.sidebar.write("### Initialization______________________________")
 col1, col2 = st.sidebar.columns(2)
 initgas = col1.multiselect(f"Initial gas in:", ['Ar', 'H2'], ["Ar"])
 wait = col2.number_input("Waiting before start [s]:", 0, 2000, 30)
 
+st.sidebar.write("### Recipe___________________________________")
 col1, col2, col3 = st.sidebar.columns(3)
-Nsteps = col1.number_input("Number of steps in recipe:", 1, 2000, 4)
-N = col2.number_input("N Cycles:", 
-        min_value=0, step=1, value=default["N"], key="N")
+v_Nsteps = 4
+Nsteps = col1.number_input("Number of steps in recipe:", min_value=1, max_value=20, value=v_Nsteps)
+N = col2.number_input("N Cycles:", min_value=0, step=1, value=default["N"], key="N")
 recipe = col3.text_input("Recipe name:", "ALD")
 times = []
 valves = []
@@ -23,7 +26,12 @@ for step in range(Nsteps):
     times.append(col2.number_input(f"**Step {step+1} - Time [s]:**", min_value=0., step=1., value=default["times"][step], format="%.3f", key=f"t{1+step}"))
     plasma.append(col3.number_input(f"**Step {step+1} - Plasma [W]:**", min_value=0, step=10, value=default["plasma"][step], key=f"plasma{1+step}"))
 
-print_tot_time(sum(times)*N)
+st.sidebar.write("### Finalization______________________________")
+col1, col2 = st.sidebar.columns(2)
+fingas = col1.multiselect(f"Final gas in:", ['Ar', 'H2'], ["Ar"])
+waitf = col2.number_input("Final waiting [s]:", min_value=0, value=30)
+
+print_tot_time(sum(times)*N+wait+waitf)
 
 # # # # # # # # # # # # # # # # # # # # # # # #
 # STOP button
@@ -46,7 +54,8 @@ if STOP:
 # # # # # # # # # # # # # # # # # # # # # # # #
 GObutton = layout[1].button('GO')
 if GObutton:
-    Recipe(times=times, valves=valves, plasma=plasma, N=N, initgas=initgas, wait=wait)
+    Recipe(times=times, valves=valves, plasma=plasma, N=N, 
+           initgas=initgas, wait=wait, fingas=fingas, waitf=waitf)
 
 # # # # # # # # # # # # # # # # # # # # # # # #
 # Show recipe graph
@@ -60,4 +69,5 @@ for i in range(len(allsteps)):
         else:
             st.warning(f"**!! Step {i} with no gas input, check it's not an error. !!**")
 
-showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, times=times, Nsteps=Nsteps)
+showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
+          times=times, Nsteps=Nsteps, N=N)
