@@ -27,19 +27,12 @@ st.set_page_config(
 )
 
 # # # # # # # # # # # # # # # # # # # # # # # #
-# Define default variables
+# Define default variables and relays
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Relays from the hat are commanded with I2C
 DEVICE_BUS = 1
 # bus = smbus.SMBus(DEVICE_BUS)
-
-# Default precursor names
-default = {"N": 100,
-           "valves": [["TEB", "Ar"],["Ar"],["H2"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"],["Ar"]],
-           "times": [1.,40.,10.,40.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.],
-           "plasma": [0,0,30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-           }
 
 # Relays attribution
 # Hat adress, relay number
@@ -48,12 +41,6 @@ relays = {
     "H2": (0x10, 2),
     "Ar": (0x10, 3)
 }
-
-# Default recipe values
-valves = default["valves"]
-times = default["times"]
-N = default["N"]
-plasma = default["plasma"]
 
 # IP Address of the Cito Plus RF generator, connected by Ethernet
 # cito_address = "169.254.1.1"
@@ -72,6 +59,9 @@ if 'start_time' not in st.session_state:
 if 'cycle_time' not in st.session_state:
     st.session_state['cycle_time'] = ''
 
+# # # # # # # # # # # # # # # # # # # # # # 
+# Functions handling gas lines
+# # # # # # # # # # # # # # # # # # # # # # 
 
 def turn_ON(gas):
     """
@@ -96,6 +86,10 @@ def turn_OFF(gas):
     # else:
     #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
 
+
+# # # # # # # # # # # # # # # # # # # # # # 
+# Functions handling Plasma
+# # # # # # # # # # # # # # # # # # # # # # 
 
 def set_plasma(plasma, logname=None):
     """
@@ -129,33 +123,11 @@ def HV_OFF():
     """
     # print(f"Plasma OFF")
     if citoctrl.open():
-        citoctrl.set_rf_off()  # turn off the rf
+        citoctrl.set_rf_off()
 
-
-def initialize(initgas=["Ar"], wait=-1, valves=valves, times=times, 
-               plasma=plasma, tot=10, N=100):
-    """
-    Make sure the relays are closed
-    """
-    if len(initgas) == 0:
-        turn_OFF("TEB")
-        turn_OFF("Ar")
-        turn_OFF("H2")
-    else:
-        for gas in ['Ar','TEB','H2']:
-            if gas not in initgas:
-                turn_OFF(gas)
-            else:
-                turn_ON(gas)
-    if wait>0:
-        showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
-                  times=times, Nsteps=len(times), highlight=-2, N=N)
-        remcycletext.write("# Cycle number:\n")
-        remcycle.markdown(f"<div><h2><span class='highlight green'>0 / {N}</h2></span></div>",
-                            unsafe_allow_html=True)
-        remcyclebar.progress(int((0)/N*100))
-        countdown(wait, tot)
-
+# # # # # # # # # # # # # # # # # # # # # # 
+# Functions handling log file writing/updating
+# # # # # # # # # # # # # # # # # # # # # # 
 
 def append_to_file(logfile="log.txt", text=""):
     """
@@ -201,19 +173,9 @@ def write_to_log(logname, **kwargs):
     append_to_file(logname, text='\n'.join('{:15}  {}'.format(
         key, value) for key, value in toprint.items()))
 
-
-def end_recipe():
-    """
-    Ending procedure for recipes
-    """
-    turn_OFF("TEB")
-    turn_OFF("H2")
-    turn_ON("Ar")
-    if citoctrl.open():
-        HV_OFF()
-        citoctrl.close()
-    st.experimental_rerun()
-
+# # # # # # # # # # # # # # # # # # # # # # 
+# Functions handling UI
+# # # # # # # # # # # # # # # # # # # # # # 
 
 def framework():
     """
@@ -284,21 +246,11 @@ def countdown(t, tot):
             t -= 1
 
 
-def print_step(n, steps):
+def showgraph(initgas=["Ar"], wait=30, plasma=[10.], valves=["Ar"], times=[10.],
+              Nsteps=4, highlight=-1, N=100):
     """
-    Print list of steps and highlight current step
+    Display a GraphViz chart of the recipe
     """
-    annotated_steps = steps.copy()
-    if n > 0:
-        annotated_steps[n-1] = "<span class='highlight green'>" + \
-            annotated_steps[n-1]+"</span>"
-    annotated_steps = "<br><br><div>" + \
-        "<br><br>".join(annotated_steps)+"</div>"
-    step_print.markdown(annotated_steps, unsafe_allow_html=True)
-
-
-def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves, 
-              times=times, Nsteps=4, highlight=-1, N=N):
     graph = graphviz.Digraph()
     graph.attr(layout="circo", rankdir='LR')
     graph.attr('node', shape="box", style="rounded")
@@ -322,11 +274,54 @@ def showgraph(initgas=["Ar"], wait=30, plasma=plasma, valves=valves,
     graph.edges(["A0"]+[f"{i}{(i+1)%(Nsteps)}" for i in range(Nsteps)])
     step_print.graphviz_chart(graph)
 
+
+# # # # # # # # # # # # # # # # # # # # # # 
+# Functions handling initialization and ending of recipe
+# # # # # # # # # # # # # # # # # # # # # # 
+
+def initialize(initgas=["Ar"], wait=-1, valves=["Ar"], times=[10.], 
+               plasma=[0], tot=10, N=100):
+    """
+    Make sure the relays are closed
+    """
+    if len(initgas) == 0:
+        turn_OFF("TEB")
+        turn_OFF("Ar")
+        turn_OFF("H2")
+    else:
+        for gas in ['Ar','TEB','H2']:
+            if gas not in initgas:
+                turn_OFF(gas)
+            else:
+                turn_ON(gas)
+    if wait>0:
+        showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
+                  times=times, Nsteps=len(times), highlight=-2, N=N)
+        remcycletext.write("# Cycle number:\n")
+        remcycle.markdown(f"<div><h2><span class='highlight green'>0 / {N}</h2></span></div>",
+                          unsafe_allow_html=True)
+        remcyclebar.progress(int((0)/N*100))
+        countdown(wait, tot)
+
+
+def end_recipe():
+    """
+    Ending procedure for recipes
+    """
+    turn_OFF("TEB")
+    turn_OFF("H2")
+    turn_ON("Ar")
+    if citoctrl.open():
+        HV_OFF()
+        citoctrl.close()
+    st.experimental_rerun()
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #  RECIPE DEFINITIONS
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-def Recipe(valves=valves, times=times, plasma=plasma, N=100, recipe="ALD", 
+def Recipe(valves=["Ar"], times=[10.], plasma=[0], N=100, recipe="ALD", 
            initgas=["Ar"], wait=30, fingas=["Ar"], waitf=30):
     """
     Definition of recipe
