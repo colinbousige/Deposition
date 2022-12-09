@@ -6,122 +6,32 @@ from ressources.setup import *
 
 framework()
 
-# Default precursor names
 if 'default' not in st.session_state:
-    st.session_state['default'] = {
-    "recipe" : "PEALD",
-    "initgas":["Ar"],
-    "wait"   :10,
-    "fingas" :["Ar"],
-    "waitf"  :10,
-    "N"      : 100,
-    "Nsteps" : 4,
-    "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
-    "times"  : [1., 40., 10., 40.],
-    "plasma" : [0,0,30,0],
-    }
-
+    st.session_state['default'] = recPEALD
 
 st.write("---")
 main = st.columns(5)
 
 if main[0].button("ALD"):
-    st.session_state['default'] = {
-        "recipe" : "ALD",
-        "initgas": ["Ar"],
-        "wait"   : 10,
-        "fingas" : ["Ar"],
-        "waitf"  : 10,
-        "N"      : 100,
-        "Nsteps" : 4,
-        "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
-        "times"  : [1., 40., 10., 40.],
-        "plasma" : [0, 0, 0, 0]
-        }
+    st.session_state['default'] = recALD
 
 if main[0].button("PEALD"):
-    st.session_state['default'] = {
-        "recipe" : "PEALD",
-        "initgas": ["Ar"],
-        "wait"   : 10,
-        "fingas" : ["Ar"],
-        "waitf"  : 10,
-        "N"      : 100,
-        "Nsteps" : 4,
-        "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
-        "times"  : [1., 40., 10., 40.],
-        "plasma" : [0, 0, 30, 0]
-        }
+    st.session_state['default'] = recPEALD
 
 if main[1].button("CVD"):
-    st.session_state['default'] = {
-        "recipe" : "CVD",
-        "initgas": ["H2"],
-        "wait"   : 240,
-        "fingas" : ["H2"],
-        "waitf"  : 1800,
-        "N"      : 1,
-        "Nsteps" : 2,
-        "valves" : [["TEB", "Ar"], ["H2"]],
-        "times"  : [10., 10.],
-        "plasma" : [0, 0]
-        }
+    st.session_state['default'] = recCVD
 
 if main[1].button("PECVD"):
-    st.session_state['default'] = {
-        "recipe" : "PECVD",
-        "initgas": ["H2"],
-        "wait"   : 240,
-        "fingas" : ["H2"],
-        "waitf"  : 1800,
-        "N"      : 1,
-        "Nsteps" : 2,
-        "valves" : [["TEB", "Ar"], ["H2"]],
-        "times"  : [10., 10.],
-        "plasma" : [0, 30]
-        }
+    st.session_state['default'] = recPECVD
 
 if main[2].button("Pulsed CVD"):
-    st.session_state['default'] = {
-        "recipe" : "Pulsed CVD",
-        "initgas": ["H2"],
-        "wait"   : 240,
-        "fingas" : ["H2"],
-        "waitf"  : 1800,
-        "N"      : 100,
-        "Nsteps" : 2,
-        "valves" : [["TEB", "Ar"], ["H2"]],
-        "times"  : [10., 40.],
-        "plasma" : [0, 0]
-        }
+    st.session_state['default'] = recPulsedCVD
 
 if main[2].button("Pulsed PECVD"):
-    st.session_state['default'] = {
-        "recipe" : "Pulsed PECVD",
-        "initgas": ["H2"],
-        "wait"   : 240,
-        "fingas" : ["H2"],
-        "waitf"  : 1800,
-        "N"      : 100,
-        "Nsteps" : 3,
-        "valves" : [["TEB", "Ar"], ["H2"], ["H2"]],
-        "times"  : [10., 10., 40.],
-        "plasma" : [0, 30, 0]
-        }
+    st.session_state['default'] = recPulsedPECVD
 
 if main[3].button("Purge"):
-    st.session_state['default'] = {
-        "recipe" : "Purge",
-        "initgas": ["Ar"],
-        "wait"   : 0,
-        "fingas" : ["Ar"],
-        "waitf"  : 1,
-        "N"      : 1,
-        "Nsteps" : 1,
-        "valves" : [["TEB", "Ar"]],
-        "times"  : [180.],
-        "plasma" : [0]
-        }
+    st.session_state['default'] = recPurge
 
 uploaded_file = main[4].file_uploader("**Import recipe:**", label_visibility="collapsed")
 if uploaded_file is not None:
@@ -138,7 +48,6 @@ if uploaded_file is not None:
         "times"  : [float(t) for t in df["times"][0].split(",")],
         "plasma" : [int(p) for p in df["plasma"][0].split(",")]
         }
-    
 
 default = st.session_state['default']
 
