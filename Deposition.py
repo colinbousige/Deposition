@@ -11,7 +11,7 @@ if 'default' not in st.session_state:
     st.session_state['default'] = recPEALD
 
 st.write("---")
-main = st.columns(5)
+main = st.columns((1,1,2,1,3))
 
 if main[0].button("ALD"):
     st.session_state['default'] = recALD
@@ -35,7 +35,9 @@ if main[3].button("Purge"):
     st.session_state['default'] = recPurge
 
 allfiles = glob.glob(f"Logs/*")
-allfiles_trimed = [f.replace("Logs/","") for f in allfiles]
+allfiles.sort(key=lambda x: os.path.getmtime(x))
+allfiles.reverse()
+allfiles_trimed = [f.replace("Logs/","").replace(".txt", "").replace("_", " ") for f in allfiles]
 
 uploaded_file = main[4].multiselect("**Import recipe:**", allfiles_trimed)
 if len(uploaded_file) > 0:
