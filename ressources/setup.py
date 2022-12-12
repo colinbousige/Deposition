@@ -3,7 +3,7 @@ import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
-import smbus
+# import smbus
 import ressources.citobase as cb
 from tempfile import mkstemp
 from shutil import move, copymode
@@ -32,7 +32,7 @@ st.set_page_config(
 
 # Relays from the hat are commanded with I2C
 DEVICE_BUS = 1
-bus = smbus.SMBus(DEVICE_BUS)
+# bus = smbus.SMBus(DEVICE_BUS)
 
 # Relays attribution
 # Hat adress, relay number
@@ -164,10 +164,10 @@ def turn_ON(gas):
     """
     DEVICE_ADDR, rel = relays[gas]
     # print(f"ON - {gas}")
-    if gas != "Ar":
-        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
-    else:
-        bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
+    # if gas != "Ar":
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
+    # else:
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
 
 
 def turn_OFF(gas):
@@ -176,10 +176,10 @@ def turn_OFF(gas):
     """
     DEVICE_ADDR, rel = relays[gas]
     # print(f"OFF - {gas}")
-    if gas != "Ar":
-        bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
-    else:
-        bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
+    # if gas != "Ar":
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
+    # else:
+    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -267,6 +267,14 @@ def write_to_log(logname, **kwargs):
     toprint = {str(key): str(value) for key, value in kwargs.items()}
     append_to_file(logname, text='\n'.join('{:15}  {}'.format(
         key, value) for key, value in toprint.items()))
+
+
+def write_recipe_to_log(logname, recipe):
+    """
+    Function to easily create and update a logfile with a recipe
+    """
+    os.makedirs(os.path.dirname(logname), exist_ok=True)
+    append_to_file(logname, text=f'Recipe-----------------------\n\n{recipe}')
 
 # # # # # # # # # # # # # # # # # # # # # # 
 # Functions handling UI
@@ -430,6 +438,9 @@ def Recipe(valves=["Ar"], times=[10.], plasma=[0], N=100, recipe="ALD",
     stepslog = [f"  - Init.:       {' + '.join(initgas)}, {wait} s"] + stepslog
     stepslog = stepslog + [f"  - Final.:      {' + '.join(fingas)}, {waitf} s"]
     stepslog = "\n"+"\n".join(stepslog)
+    csv = f"""recipe|initgas|wait|fingas|waitf|N|Nsteps|valves|times|plasma
+{recipe}|{",".join(initgas)}|{wait}|{",".join(fingas)}|{waitf}|{N}|{len(times)}|{",".join(";".join(v) for v in valves)}|{",".join(str(t) for t in times)}|{",".join(str(p) for p in plasma)}\n\nLog--------------------------\n"""
+    write_recipe_to_log(st.session_state['logname'], csv)
     write_to_log(st.session_state['logname'], recipe=recipe, start=start_time,
                  steps=stepslog, N=N, time_per_cycle=timedelta(seconds=st.session_state['cycle_time']))
     initialize(initgas=initgas, wait=wait, valves=valves, times=times, 

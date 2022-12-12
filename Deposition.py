@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import glob
 from datetime import datetime
 from dateutil import parser
 from ressources.setup import *
@@ -33,18 +34,21 @@ if main[2].button("Pulsed PECVD"):
 if main[3].button("Purge"):
     st.session_state['default'] = recPurge
 
-uploaded_file = main[4].file_uploader("**Import recipe:**", label_visibility="collapsed")
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, sep="|")
+allfiles = glob.glob(f"Logs/*")
+allfiles_trimed = [f.replace("Logs/","") for f in allfiles]
+
+uploaded_file = main[4].multiselect("**Import recipe:**", allfiles_trimed)
+if len(uploaded_file) > 0:
+    df = pd.read_csv(f"Logs/{uploaded_file[0]}", sep = "|", nrows = 2, skiprows = 2)
     st.session_state['default'] = {
         "recipe" : df["recipe"][0],
-        "initgas": df["initgas"][0].split(","),
+        "initgas": df["initgas"].fillna('')[0].split(","),
         "wait"   : int(df["wait"][0]),
-        "fingas" : df["fingas"][0].split(","),
+        "fingas" : df["fingas"].fillna('')[0].split(","),
         "waitf"  : int(df["waitf"][0]),
         "N"      : int(df["N"][0]),
         "Nsteps" : int(df["Nsteps"][0]),
-        "valves" : [v.split(";") for v in df["valves"][0].split(",")],
+        "valves" : [v.split(";") for v in df["valves"].fillna('')[0].split(",")],
         "times"  : [float(t) for t in df["times"][0].split(",")],
         "plasma" : [int(p) for p in df["plasma"][0].split(",")]
         }
@@ -106,7 +110,7 @@ if STOP:
 # # # # # # # # # # # # # # # # # # # # # # # #
 GObutton = layout[1].button('GO')
 if GObutton:
-    Recipe(times=times, valves=valves, plasma=plasma, N=N, 
+    Recipe(times=times, valves=valves, plasma=plasma, N=N, recipe=recipe,
            initgas=initgas, wait=wait, fingas=fingas, waitf=waitf)
 
 # # # # # # # # # # # # # # # # # # # # # # # #
@@ -123,13 +127,3 @@ for i in range(len(allsteps)):
 
 showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
           times=times, Nsteps=Nsteps, N=N)
-
-
-csv = f"""recipe|initgas|wait|fingas|waitf|N|Nsteps|valves|times|plasma
-{recipe}|{",".join(initgas)}|{wait}|{",".join(fingas)}|{waitf}|{N}|{Nsteps}|{",".join(";".join(v) for v in valves)}|{",".join(str(t) for t in times)}|{",".join(str(p) for p in plasma)}"""
-
-main[3].download_button("**Save recipe**",
-    data=csv,
-    file_name=f"{datetime.now().strftime(f'%Y-%m-%d-%H:%M:%S')}_{recipe}.csv",
-    mime='text/csv',
-)
