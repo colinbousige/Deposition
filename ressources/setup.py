@@ -349,7 +349,7 @@ def countdown(t, tot):
             t -= 1
 
 
-def showgraph(initgas=["Ar"], wait=30, plasma=[10.], valves=["Ar"], times=[10.],
+def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=sorted(relays.keys())[0], times=[10.],
               Nsteps=4, highlight=-1, N=100):
     """
     Display a GraphViz chart of the recipe
@@ -382,17 +382,16 @@ def showgraph(initgas=["Ar"], wait=30, plasma=[10.], valves=["Ar"], times=[10.],
 # Functions handling initialization and ending of recipe
 # # # # # # # # # # # # # # # # # # # # # # 
 
-def initialize(initgas=["Ar"], wait=-1, valves=["Ar"], times=[10.], 
+def initialize(initgas=sorted(relays.keys())[0], wait=-1, valves=sorted(relays.keys())[0], times=[10.], 
                plasma=[0], tot=10, N=100):
     """
     Make sure the relays are closed
     """
     if len(initgas) == 0:
-        turn_OFF("TEB")
-        turn_OFF("Ar")
-        turn_OFF("H2")
+        for gas in sorted(relays.keys()):
+            turn_OFF(gas)
     else:
-        for gas in ['Ar','TEB','H2']:
+        for gas in sorted(relays.keys()):
             if gas not in initgas:
                 turn_OFF(gas)
             else:
@@ -424,8 +423,8 @@ def end_recipe():
 #  RECIPE DEFINITIONS
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-def Recipe(valves=["Ar"], times=[10.], plasma=[0], N=100, recipe="ALD", 
-           initgas=["Ar"], wait=30, fingas=["Ar"], waitf=30):
+def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, recipe="ALD", 
+           initgas=sorted(relays.keys())[0], wait=30, fingas=sorted(relays.keys())[0], waitf=30):
     """
     Definition of recipe
     """

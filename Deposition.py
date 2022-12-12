@@ -6,12 +6,14 @@ from dateutil import parser
 from ressources.setup import *
 
 framework()
+c1, c2 = st.columns((2, 1))
+warning_message = c1.empty()
 
 if 'default' not in st.session_state:
     st.session_state['default'] = recPEALD
 
 st.write("---")
-main = st.columns((1,1,2,1,3))
+main = st.columns((1,1,1,4))
 
 if main[0].button("ALD"):
     st.session_state['default'] = recALD
@@ -37,11 +39,11 @@ if main[3].button("Purge"):
 allfiles = glob.glob(f"Logs/*")
 allfiles.sort(key=lambda x: os.path.getmtime(x))
 allfiles.reverse()
-allfiles_trimed = [f.replace("Logs/","").replace(".txt", "").replace("_", " ") for f in allfiles]
+allfiles_trimed = [f.replace("Logs/","").replace(".txt", "") for f in allfiles]
 
-uploaded_file = main[4].multiselect("**Import recipe:**", allfiles_trimed)
+uploaded_file = main[3].multiselect("**Import recipe:**", allfiles_trimed, label_visibility="collapsed", max_selections=1)
 if len(uploaded_file) > 0:
-    df = pd.read_csv(f"Logs/{uploaded_file[0]}", sep = "|", nrows = 2, skiprows = 2)
+    df = pd.read_csv(f"Logs/{uploaded_file[0]}.txt", sep = "|", nrows = 2, skiprows = 2)
     st.session_state['default'] = {
         "recipe" : df["recipe"][0],
         "initgas": df["initgas"].fillna('')[0].split(","),
@@ -59,7 +61,7 @@ default = st.session_state['default']
 
 st.sidebar.write("### Initialization______________________________")
 col1, col2 = st.sidebar.columns(2)
-initgas = col1.multiselect(f"Initial gas in:", ['Ar', 'H2'], default["initgas"])
+initgas = col1.multiselect(f"Initial gas in:", sorted(relays.keys()), default["initgas"])
 wait = col2.number_input("Waiting before start [s]:", 0, 2000, default["wait"])
 
 st.sidebar.write("### Recipe___________________________________")
@@ -74,10 +76,10 @@ plasma = []
 
 for step in range(Nsteps):
     col1, col2, col3 = st.sidebar.columns(3)
-    dv = default["valves"][step] if step < len(default["valves"]) else ["Ar"]
+    dv = default["valves"][step] if step < len(default["valves"]) else sorted(relays.keys())[0]
     dt = default["times"][step] if step < len(default["times"]) else 10.
     dp = default["plasma"][step] if step < len(default["plasma"]) else 0
-    valves.append(col1.multiselect(f"**Step {step+1} - Gas:**", ['TEB', 'Ar', 'H2'], 
+    valves.append(col1.multiselect(f"**Step {step+1} - Gas:**", sorted(relays.keys()), 
                   default=dv, key=f"valve{1+step}"))
     times.append(col2.number_input(f"**Step {step+1} - Time [s]:**", max_value=1.e5,
                  min_value=0., step=1., value=dt, format="%.3f", key=f"t{1+step}"))
@@ -86,7 +88,7 @@ for step in range(Nsteps):
 
 st.sidebar.write("### Finalization______________________________")
 col1, col2 = st.sidebar.columns(2)
-fingas = col1.multiselect(f"Final gas in:", ['Ar', 'H2'], default["fingas"])
+fingas = col1.multiselect(f"Final gas in:", sorted(relays.keys()), default["fingas"])
 waitf = col2.number_input("Final waiting [s]:", min_value=0, value=default["waitf"])
 
 print_tot_time(sum(times)*N+wait+waitf)
@@ -123,9 +125,9 @@ allsteps=[initgas]+valves
 for i in range(len(allsteps)):
     if len(allsteps[i])==0:
         if i==0:
-            st.warning("**!! Initialization with no gas input, check it's not an error. !!**")
+            warning_message.warning("**!! Initialization with no gas input, check it's not an error. !!**")
         else:
-            st.warning(f"**!! Step {i} with no gas input, check it's not an error. !!**")
+            warning_message.warning(f"**!! Step {i} with no gas input, check it's not an error. !!**")
 
 showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
           times=times, Nsteps=Nsteps, N=N)
