@@ -67,7 +67,7 @@ wait = col2.number_input("Waiting before start [s]:", 0, 2000, default["wait"])
 st.sidebar.write("### Recipe___________________________________")
 col1, col2, col3 = st.sidebar.columns(3)
 Nsteps = col1.empty()
-Nsteps = col1.number_input("Number of steps in recipe:", min_value=1, max_value=20, value=default["Nsteps"])
+Nsteps = col1.number_input("Number of steps:", min_value=1, max_value=20, value=default["Nsteps"])
 N = col2.number_input("N Cycles:", min_value=0, step=1, value=default["N"], key="N")
 recipe = col3.text_input("Recipe name:", default["recipe"])
 times = []

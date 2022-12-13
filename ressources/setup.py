@@ -3,11 +3,11 @@ import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
-# import smbus
 import ressources.citobase as cb
 from tempfile import mkstemp
 from shutil import move, copymode
 import os
+import pyhid_usb_relay
 
 st.set_page_config(
     page_title="ALD – CVD Process",
@@ -31,15 +31,15 @@ st.set_page_config(
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Relays from the hat are commanded with I2C
-DEVICE_BUS = 1
+rel = pyhid_usb_relay.find()
 # bus = smbus.SMBus(DEVICE_BUS)
 
 # Relays attribution
 # Hat adress, relay number
 relays = {
-    "TEB": (0x10, 1),
-    "H2": (0x10, 2),
-    "Ar": (0x10, 3)
+    "TEB": 1,
+    "H2": 2,
+    "Ar": 3
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # #
@@ -162,24 +162,20 @@ def turn_ON(gas):
     """
     Open relay from the hat with I2C command
     """
-    DEVICE_ADDR, rel = relays[gas]
-    # print(f"ON - {gas}")
-    # if gas != "Ar":
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF)
-    # else:
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00) # "Ar" Normally Open
+    if gas != "Ar":
+        rel[relays[gas]] = True
+    else:
+        rel[relays[gas]] = False # "Ar" Normally Open
 
 
 def turn_OFF(gas):
     """
     Close relay from the hat with I2C command
     """
-    DEVICE_ADDR, rel = relays[gas]
-    # print(f"OFF - {gas}")
-    # if gas != "Ar":
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0x00)
-    # else:
-    #     bus.write_byte_data(DEVICE_ADDR, rel, 0xFF) # "Ar" Normally Open
+    if gas != "Ar":
+        rel[relays[gas]] = False
+    else:
+        rel[relays[gas]] = True # "Ar" Normally Open
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -354,28 +350,32 @@ def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=so
     """
     Display a GraphViz chart of the recipe
     """
-    graph = graphviz.Digraph()
-    graph.attr(layout="circo", rankdir='LR')
-    graph.attr('node', shape="box", style="rounded")
-    graph.attr(label=f'                                          Repeat {N} times')
-    if highlight==-2:
-        graph.node("A",f"{' + '.join(initgas)}\n{wait} s", 
-                   style='rounded,filled', fillcolor="lightseagreen")
-    else:
-        graph.node("A",f"{' + '.join(initgas)}\n{wait} s")
-    for i in range(Nsteps):
-        pl=f"\nPlasma {plasma[i]} W" if plasma[i]>0 else ""
-        init = f'{i+1}. {" + ".join(valves[i])}\n{times[i]} s{pl}'
-        if plasma[i]>0 and highlight==-1:
-            graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
-        elif highlight>=0 and i==highlight and plasma[i]==0:
-            graph.node(str(i), init, style='rounded,filled', fillcolor="lightseagreen")
-        elif highlight>=0 and i==highlight and plasma[i]>0:
-            graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
-        else:
-            graph.node(str(i), init)
-    graph.edges(["A0"]+[f"{i}{(i+1)%(Nsteps)}" for i in range(Nsteps)])
-    step_print.graphviz_chart(graph)
+    stepslog = ["    - %-11s%.3lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
+    stepslog = [f"  - Init.:       {' + '.join(initgas)}, {wait} s"] + stepslog
+    stepslog = "\n"+"\n".join(stepslog)
+    step_print.write(stepslog)
+    # graph = graphviz.Digraph()
+    # graph.attr(layout="circo", rankdir='LR')
+    # graph.attr('node', shape="box", style="rounded")
+    # graph.attr(label=f'                                          Repeat {N} times')
+    # if highlight==-2:
+    #     graph.node("A",f"{' + '.join(initgas)}\n{wait} s", 
+    #                style='rounded,filled', fillcolor="lightseagreen")
+    # else:
+    #     graph.node("A",f"{' + '.join(initgas)}\n{wait} s")
+    # for i in range(Nsteps):
+    #     pl=f"\nPlasma {plasma[i]} W" if plasma[i]>0 else ""
+    #     init = f'{i+1}. {" + ".join(valves[i])}\n{times[i]} s{pl}'
+    #     if plasma[i]>0 and highlight==-1:
+    #         graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
+    #     elif highlight>=0 and i==highlight and plasma[i]==0:
+    #         graph.node(str(i), init, style='rounded,filled', fillcolor="lightseagreen")
+    #     elif highlight>=0 and i==highlight and plasma[i]>0:
+    #         graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
+    #     else:
+    #         graph.node(str(i), init)
+    # graph.edges(["A0"]+[f"{i}{(i+1)%(Nsteps)}" for i in range(Nsteps)])
+    # step_print.graphviz_chart(graph)
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
