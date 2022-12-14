@@ -1,5 +1,4 @@
 import streamlit as st
-# import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -345,7 +344,7 @@ def countdown(t, tot):
 def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=sorted(relays.keys())[0], times=[10.],
               Nsteps=4, highlight=-1, N=100, fingas=sorted(relays.keys())[0], waitf=30):
     """
-    Display a GraphViz chart of the recipe
+    Display a chart of the recipe
     """
     initgasclean = ' + '.join(initgas)
     if initgasclean == "":
@@ -368,28 +367,6 @@ def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=so
         annotated_steps[highlight+1 if highlight >0 else highlight] = f"<span class='highlightstep blue'>{annotated_steps[highlight+1 if highlight >0 else highlight]}</span>"
     annotated_steps = "<br><div style='line-height:35px'>" + "".join(annotated_steps)+"</div>"
     step_print.markdown(annotated_steps, unsafe_allow_html=True)
-    # graph = graphviz.Digraph()
-    # graph.attr(layout="circo", rankdir='LR')
-    # graph.attr('node', shape="box", style="rounded")
-    # graph.attr(label=f'                                          Repeat {N} times')
-    # if highlight==-2:
-    #     graph.node("A",f"{' + '.join(initgas)}\n{wait} s", 
-    #                style='rounded,filled', fillcolor="lightseagreen")
-    # else:
-    #     graph.node("A",f"{' + '.join(initgas)}\n{wait} s")
-    # for i in range(Nsteps):
-    #     pl=f"\nPlasma {plasma[i]} W" if plasma[i]>0 else ""
-    #     init = f'{i+1}. {" + ".join(valves[i])}\n{times[i]} s{pl}'
-    #     if plasma[i]>0 and highlight==-1:
-    #         graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
-    #     elif highlight>=0 and i==highlight and plasma[i]==0:
-    #         graph.node(str(i), init, style='rounded,filled', fillcolor="lightseagreen")
-    #     elif highlight>=0 and i==highlight and plasma[i]>0:
-    #         graph.node(str(i), init, style='rounded,filled', fillcolor="cyan")
-    #     else:
-    #         graph.node(str(i), init)
-    # graph.edges(["A0"]+[f"{i}{(i+1)%(Nsteps)}" for i in range(Nsteps)])
-    # step_print.graphviz_chart(graph)
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -447,9 +424,15 @@ def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, reci
     st.session_state['start_time'] = start_time
     st.session_state['logname'] = f"Logs/{start_time}_{recipe}.txt"
     st.session_state['cycle_time'] = (tot-waitf-wait)/N
-    stepslog = ["    - %-11s%.3lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
-    stepslog = [f"  - Init.:       {' + '.join(initgas)}, {wait} s"] + stepslog
-    stepslog = stepslog + [f"  - Final.:      {' + '.join(fingas)}, {waitf} s"]
+    initgasclean = ' + '.join(initgas)
+    if initgasclean == "":
+        initgasclean = "No Gas"
+    fingasclean = ' + '.join(fingas)
+    if fingasclean == "":
+        fingasclean = "No Gas"
+    stepslog = ["    - %-11s%.3lf s - Plasma %d W" % (' + '.join(v) if len(v)>0 else "No Gas", t, p) for v,t,p in zip(valves,times,plasma)]
+    stepslog = [f"  - Init.:       {initgasclean}, {wait} s"] + stepslog
+    stepslog = stepslog + [f"  - Final.:      {fingasclean}, {waitf} s"]
     stepslog = "\n"+"\n".join(stepslog)
     csv = f"""recipe|initgas|wait|fingas|waitf|N|Nsteps|valves|times|plasma
 {recipe}|{",".join(initgas)}|{wait}|{",".join(fingas)}|{waitf}|{N}|{len(times)}|{",".join(";".join(v) for v in valves)}|{",".join(str(t) for t in times)}|{",".join(str(p) for p in plasma)}\n\nLog--------------------------\n"""
