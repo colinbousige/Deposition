@@ -19,7 +19,7 @@ st.set_page_config(
         'Report a bug': "https://lmi.cnrs.fr/author/colin-bousige/",
         'About': """
         ## ALD – CVD Process
-        Version date 2021-10-27.
+        Version date 2022-12-14.
 
         This app was made by [Colin Bousige](https://lmi.cnrs.fr/author/colin-bousige/). Contact me for support, requests, or to signal a bug.
         """
