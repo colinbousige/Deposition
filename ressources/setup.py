@@ -30,14 +30,14 @@ st.set_page_config(
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Relays from the USB relay board
-rel = pyhid_usb_relay.find()
+# relayboard = pyhid_usb_relay.find()
+relayboard = [0,1,2,3,4]
 
-# Relays attribution
-# Hat adress, relay number
+# Relays attribution, state (NO for Normally Opened, NC for Normally Closed)
 relays = {
     "TEB": (1, "NC"),
-    "H2": (2, "NC"),
-    "Ar": (3, "NO")
+    "H2":  (2, "NC"),
+    "Ar":  (3, "NO")
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # #
@@ -161,7 +161,7 @@ def turn_ON(gas):
     Switch relay from the board to turn ON gas (check if valve is NO or NC)
     """
     relnum, state = relays[gas]
-    rel[relnum] = True if state == "NC" else False
+    relayboard[relnum] = True if state == "NC" else False
 
 
 def turn_OFF(gas):
@@ -169,7 +169,7 @@ def turn_OFF(gas):
     Switch relay from the board to turn OFF gas (check if valve is NO or NC)
     """
     relnum, state = relays[gas]
-    rel[relnum] = True if state == "NO" else False
+    relayboard[relnum] = True if state == "NO" else False
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -307,6 +307,7 @@ def print_tot_time(tot):
     final_time.markdown(
         "<div><h2><span class='highlight red'>"+finaltime.strftime("%H:%M") +
         "</h2></span></div>", unsafe_allow_html=True)
+    remcyclebar.progress(int((0)/100))
 
 
 def countdown(t, tot):
