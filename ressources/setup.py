@@ -35,9 +35,9 @@ rel = pyhid_usb_relay.find()
 # Relays attribution
 # Hat adress, relay number
 relays = {
-    "TEB": 1,
-    "H2": 2,
-    "Ar": 3
+    "TEB": (1, "NC"),
+    "H2": (2, "NC"),
+    "Ar": (3, "NO")
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # #
@@ -158,22 +158,18 @@ if 'cycle_time' not in st.session_state:
 
 def turn_ON(gas):
     """
-    Open relay from the hat with I2C command
+    Switch relay from the board to turn ON gas (check if valve is NO or NC)
     """
-    if gas != "Ar":
-        rel[relays[gas]] = True
-    else:
-        rel[relays[gas]] = False # "Ar" Normally Open
+    relnum, state = relays[gas]
+    rel[relnum] = True if state == "NC" else False
 
 
 def turn_OFF(gas):
     """
-    Close relay from the hat with I2C command
+    Switch relay from the board to turn OFF gas (check if valve is NO or NC)
     """
-    if gas != "Ar":
-        rel[relays[gas]] = False
-    else:
-        rel[relays[gas]] = True # "Ar" Normally Open
+    relnum, state = relays[gas]
+    rel[relnum] = True if state == "NO" else False
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -185,8 +181,9 @@ def set_plasma(plasma, logname=None):
     Open the connection to the RF generator and setup the plasma power
     """
     if citoctrl.open():
-        citoctrl.set_power_setpoint_watts(plasma)  # set the rf power
         st.success("Connection with RF generator OK.")
+        if citoctrl.get_power_setpoint_watts()[1] != plasma:
+            citoctrl.set_power_setpoint_watts(plasma)  # set the rf power
         st.info(f"Setpoint: {plasma} W - Value: {citoctrl.get_power_setpoint_watts()[1]} W")
         if logname is not None:
             write_to_log(logname, plasma_active="Yes")
