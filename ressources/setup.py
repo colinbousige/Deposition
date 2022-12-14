@@ -30,9 +30,8 @@ st.set_page_config(
 # Define default variables and relays
 # # # # # # # # # # # # # # # # # # # # # # # #
 
-# Relays from the hat are commanded with I2C
-# rel = pyhid_usb_relay.find()
-# bus = smbus.SMBus(DEVICE_BUS)
+# Relays from the USB relay board
+rel = pyhid_usb_relay.find()
 
 # Relays attribution
 # Hat adress, relay number
@@ -162,20 +161,20 @@ def turn_ON(gas):
     """
     Open relay from the hat with I2C command
     """
-    # if gas != "Ar":
-    #     rel[relays[gas]] = True
-    # else:
-    #     rel[relays[gas]] = False # "Ar" Normally Open
+    if gas != "Ar":
+        rel[relays[gas]] = True
+    else:
+        rel[relays[gas]] = False # "Ar" Normally Open
 
 
 def turn_OFF(gas):
     """
     Close relay from the hat with I2C command
     """
-    # if gas != "Ar":
-    #     rel[relays[gas]] = False
-    # else:
-    #     rel[relays[gas]] = True # "Ar" Normally Open
+    if gas != "Ar":
+        rel[relays[gas]] = False
+    else:
+        rel[relays[gas]] = True # "Ar" Normally Open
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -203,7 +202,6 @@ def HV_ON():
     """
     Turn HV on
     """
-    # print(f"Plasma ON")
     if citoctrl.open():
         citoctrl.set_rf_on()
 
@@ -212,7 +210,6 @@ def HV_OFF():
     """
     Turn HV off
     """
-    # print(f"Plasma OFF")
     if citoctrl.open():
         citoctrl.set_rf_off()
 
