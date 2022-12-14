@@ -1,5 +1,5 @@
 import streamlit as st
-import graphviz
+# import graphviz
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -31,7 +31,7 @@ st.set_page_config(
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 # Relays from the hat are commanded with I2C
-rel = pyhid_usb_relay.find()
+# rel = pyhid_usb_relay.find()
 # bus = smbus.SMBus(DEVICE_BUS)
 
 # Relays attribution
@@ -162,20 +162,20 @@ def turn_ON(gas):
     """
     Open relay from the hat with I2C command
     """
-    if gas != "Ar":
-        rel[relays[gas]] = True
-    else:
-        rel[relays[gas]] = False # "Ar" Normally Open
+    # if gas != "Ar":
+    #     rel[relays[gas]] = True
+    # else:
+    #     rel[relays[gas]] = False # "Ar" Normally Open
 
 
 def turn_OFF(gas):
     """
     Close relay from the hat with I2C command
     """
-    if gas != "Ar":
-        rel[relays[gas]] = False
-    else:
-        rel[relays[gas]] = True # "Ar" Normally Open
+    # if gas != "Ar":
+    #     rel[relays[gas]] = False
+    # else:
+    #     rel[relays[gas]] = True # "Ar" Normally Open
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -193,7 +193,7 @@ def set_plasma(plasma, logname=None):
         if logname is not None:
             write_to_log(logname, plasma_active="Yes")
     else:
-        st.error("Can't open connection to the RF generator.")
+        st.error("❌ Can't open connection to the RF generator.")
         if logname is not None:
             write_to_log(logname, plasma_active="No")
         return(False)
@@ -282,7 +282,7 @@ def framework():
     """
     global c1, c2, remcycletext, remcycle, remcyclebar, step_print
     global remtottimetext, remtottime, remtime, final_time_text, final_time
-    c1, c2 = st.columns((2, 1))
+    c1, c2 = st.columns((1, 1))
     remcycletext = c1.empty()
     remcycle = c1.empty()
     remcyclebar = c1.empty()
@@ -328,14 +328,14 @@ def countdown(t, tot):
             secs, mil = divmod(rest, 1)
             timer = '{:02d}:{:02d}:{:03d}'.format(int(mins), int(secs), int(mil*1000))
             remtime.markdown(
-                f"<div><h2>Current step: <span class='highlight blue'>{timer}</h2></span></div>",
+                f"<div><h3>Current step: <span class='highlight blue'>{timer}</h3></span></div>",
                 unsafe_allow_html=True)
             totmins, totsecs = divmod(tot, 60)
             tothours, totmins = divmod(totmins, 60)
             tottimer = '{:02d}:{:02d}:{:02d}'.format(
                 tothours, totmins, totsecs)
             remtottime.markdown(
-                f"<div><h2>Total: <span class='highlight blue'>{tottimer}</h2></span></div>",
+                f"<div><h3>Total: <span class='highlight blue'>{tottimer}</h3></span></div>",
                 unsafe_allow_html=True)
             time.sleep(1)
             t -= 1
@@ -346,14 +346,31 @@ def countdown(t, tot):
 
 
 def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=sorted(relays.keys())[0], times=[10.],
-              Nsteps=4, highlight=-1, N=100):
+              Nsteps=4, highlight=-1, N=100, fingas=sorted(relays.keys())[0], waitf=30):
     """
     Display a GraphViz chart of the recipe
     """
-    stepslog = ["    - %-11s%.3lf s - Plasma %d W" % (' + '.join(v), t, p) for v,t,p in zip(valves,times,plasma)]
-    stepslog = [f"  - Init.:       {' + '.join(initgas)}, {wait} s"] + stepslog
-    stepslog = "\n"+"\n".join(stepslog)
-    step_print.write(stepslog)
+    initgasclean = ' + '.join(initgas)
+    if initgasclean == "":
+        initgasclean = "_**No Input Gas**_"
+    fingasclean = ' + '.join(fingas)
+    if fingasclean == "":
+        fingasclean = "_**No Input Gas**_"
+    stepslog  = [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**0 &bull; Initialization:** &nbsp;&nbsp;&nbsp;&nbsp;{initgasclean} – {wait} s<br>"]
+    pl = [f" – <b>Plasma {pl} W</b>" for pl in plasma]
+    pl = [p.replace(" – <b>Plasma 0 W</b>", "") for p in pl]
+    stepslog += [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Repeat {N} times:**<br>"]
+    stepslog += ["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>%3d &bull; %-11s</b> – %.3lf s%s<br>" % \
+            (i+1, ' + '.join(v) if len(v)>0 else "_**No Input Gas**_", t, p) for i,(v,t,p) in enumerate(zip(valves,times,pl))]
+    stepslog += [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**{len(times)+1} &bull; Finalization:** &nbsp;&nbsp;&nbsp;&nbsp;{fingasclean} – {waitf} s"]
+    
+    annotated_steps = stepslog.copy()
+    if highlight >= 0:
+        if highlight>=1 and highlight<len(times)+1:
+            annotated_steps[1] = f"<span class='highlightstep green'>{annotated_steps[1]}</span>"
+        annotated_steps[highlight+1 if highlight >0 else highlight] = f"<span class='highlightstep blue'>{annotated_steps[highlight+1 if highlight >0 else highlight]}</span>"
+    annotated_steps = "<br><div style='line-height:35px'>" + "".join(annotated_steps)+"</div>"
+    step_print.markdown(annotated_steps, unsafe_allow_html=True)
     # graph = graphviz.Digraph()
     # graph.attr(layout="circo", rankdir='LR')
     # graph.attr('node', shape="box", style="rounded")
@@ -383,7 +400,7 @@ def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=so
 # # # # # # # # # # # # # # # # # # # # # # 
 
 def initialize(initgas=sorted(relays.keys())[0], wait=-1, valves=sorted(relays.keys())[0], times=[10.], 
-               plasma=[0], tot=10, N=100):
+               plasma=[0], tot=10, N=100, fingas=sorted(relays.keys())[0], waitf=30):
     """
     Make sure the relays are closed
     """
@@ -398,7 +415,7 @@ def initialize(initgas=sorted(relays.keys())[0], wait=-1, valves=sorted(relays.k
                 turn_ON(gas)
     if wait>0:
         showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
-                  times=times, Nsteps=len(times), highlight=-2, N=N)
+                  times=times, Nsteps=len(times), highlight=0, N=N, fingas=fingas, waitf=waitf)
         remcycletext.write("# Cycle number:\n")
         remcycle.markdown(f"<div><h2><span class='highlight green'>0 / {N}</h2></span></div>",
                           unsafe_allow_html=True)
@@ -443,7 +460,7 @@ def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, reci
     write_to_log(st.session_state['logname'], recipe=recipe, start=start_time,
                  steps=stepslog, N=N, time_per_cycle=timedelta(seconds=st.session_state['cycle_time']))
     initialize(initgas=initgas, wait=wait, valves=valves, times=times, 
-               plasma=plasma, tot=tot, N=N)
+               plasma=plasma, tot=tot, N=N, fingas=fingas, waitf=waitf)
     tot = tot - wait
     for i in range(N):
         for step in range(len(times)):
@@ -458,7 +475,7 @@ def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, reci
                 set_plasma(plasma[step])
                 HV_ON()
             showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, N=N,
-                      times=times, Nsteps=len(times), highlight=step)
+                      times=times, Nsteps=len(times), highlight=step+1, fingas=fingas, waitf=waitf)
             countdown(times[step], tot)
             tot = tot-times[step]
             for v in valves[step]:
@@ -468,7 +485,7 @@ def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, reci
                 HV_OFF()
         update_cycle(st.session_state['logname'], i, N)
     showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, N=N,
-              times=times, Nsteps=len(times), highlight=-1)
+              times=times, Nsteps=len(times), highlight=1+len(times), fingas=fingas, waitf=waitf)
     for v in fingas:
         turn_ON(v)
     remcycletext.write("# Finalization....\n")

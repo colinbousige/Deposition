@@ -13,7 +13,7 @@ if 'default' not in st.session_state:
     st.session_state['default'] = recPEALD
 
 st.write("---")
-main = st.columns((1,1,1,4))
+main = st.columns((1,1,2,3))
 
 if main[0].button("ALD"):
     st.session_state['default'] = recALD
@@ -121,13 +121,13 @@ if GObutton:
 # Show recipe graph
 # # # # # # # # # # # # # # # # # # # # # # # #
 
-allsteps=[initgas]+valves
+allsteps=[initgas]+valves+[fingas]
+nogas=[]
 for i in range(len(allsteps)):
     if len(allsteps[i])==0:
-        if i==0:
-            warning_message.warning("**!! Initialization with no gas input, check it's not an error. !!**")
-        else:
-            warning_message.warning(f"**!! Step {i} with no gas input, check it's not an error. !!**")
+        nogas.append(str(i))
+if len(nogas)>0:
+    warning_message.warning(f"**⚠️ Step {', '.join(nogas)} with no gas input, check it's not an error.** ⚠️")
 
 showgraph(initgas=initgas, wait=wait, plasma=plasma, valves=valves, 
-          times=times, Nsteps=Nsteps, N=N)
+          times=times, Nsteps=Nsteps, N=N, fingas=fingas, waitf=waitf)

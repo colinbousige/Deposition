@@ -1,7 +1,23 @@
+#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 1.5rem;}
+.css-1vq4p4l.e1fqkh3o4 {
+    margin-top: -110px;
+}
+
+
 .highlight {
   border-radius: 0.4rem;
   color: black;
   padding: 0.5rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  margin-bottom: 1rem;
+}
+.highlightstep {
+  border-radius: 0.4rem;
+  color: black;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-right: 1rem;
   margin-bottom: 1rem;
 }
 .blue {
