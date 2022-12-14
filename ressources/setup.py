@@ -353,13 +353,13 @@ def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=so
     fingasclean = ' + '.join(fingas)
     if fingasclean == "":
         fingasclean = "_**No Input Gas**_"
-    stepslog  = [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**0 &bull; Initialization:** &nbsp;&nbsp;&nbsp;&nbsp;{initgasclean} – {wait} s<br>"]
+    stepslog  = [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**0 &bull; Initialization:** &nbsp;&nbsp;&nbsp;&nbsp;**{initgasclean}** – {wait} s<br>"]
     pl = [f" – <b>Plasma {pl} W</b>" for pl in plasma]
     pl = [p.replace(" – <b>Plasma 0 W</b>", "") for p in pl]
     stepslog += [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Repeat {N} times:**<br>"]
     stepslog += ["&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>%3d &bull; %-11s</b> – %.3lf s%s<br>" % \
             (i+1, ' + '.join(v) if len(v)>0 else "_**No Input Gas**_", t, p) for i,(v,t,p) in enumerate(zip(valves,times,pl))]
-    stepslog += [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**{len(times)+1} &bull; Finalization:** &nbsp;&nbsp;&nbsp;&nbsp;{fingasclean} – {waitf} s"]
+    stepslog += [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**{len(times)+1} &bull; Finalization:** &nbsp;&nbsp;&nbsp;&nbsp;**{fingasclean}** – {waitf} s"]
     
     annotated_steps = stepslog.copy()
     if highlight >= 0:

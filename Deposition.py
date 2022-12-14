@@ -6,8 +6,7 @@ from dateutil import parser
 from ressources.setup import *
 
 framework()
-c1, c2 = st.columns((2, 1))
-warning_message = c1.empty()
+warning_message = st.empty()
 
 if 'default' not in st.session_state:
     st.session_state['default'] = recPEALD
