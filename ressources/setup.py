@@ -46,10 +46,10 @@ relays = {
 
 recPEALD = {
     "recipe" : "PEALD",
-    "initgas":["Ar"],
-    "wait"   :10,
-    "fingas" :["Ar"],
-    "waitf"  :10,
+    "initgas": ["Ar"],
+    "wait"   : 10,
+    "fingas" : ["Ar"],
+    "waitf"  : 10,
     "N"      : 100,
     "Nsteps" : 4,
     "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
