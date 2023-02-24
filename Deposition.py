@@ -4,6 +4,7 @@ import glob
 from datetime import datetime
 from dateutil import parser
 from ressources.setup import *
+from ressources.recipes import *
 
 framework()
 warning_message = st.empty()

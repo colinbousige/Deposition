@@ -33,107 +33,12 @@ st.set_page_config(
 relayboard = pyhid_usb_relay.find()
 # relayboard = [0,1,2,3,4]
 
-# Relays attribution, state (NO for Normally Opened, NC for Normally Closed)
+# Relays attribution, state
 relays = {
-    "TEB": (1, "NC"),
-    "H2":  (2, "NC"),
-    "Ar":  (3, "NO")
+    "TEB": 4,
+    "H2":  3,
+    "Ar":  2
 }
-
-# # # # # # # # # # # # # # # # # # # # # # # #
-# Define default recipes
-# # # # # # # # # # # # # # # # # # # # # # # #
-
-recPEALD = {
-    "recipe" : "PEALD",
-    "initgas": ["Ar"],
-    "wait"   : 10,
-    "fingas" : ["Ar"],
-    "waitf"  : 10,
-    "N"      : 100,
-    "Nsteps" : 4,
-    "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
-    "times"  : [1., 40., 10., 40.],
-    "plasma" : [0,0,30,0],
-    }
-
-recALD = {
-    "recipe" : "ALD",
-    "initgas": ["Ar"],
-    "wait"   : 10,
-    "fingas" : ["Ar"],
-    "waitf"  : 10,
-    "N"      : 100,
-    "Nsteps" : 4,
-    "valves" : [["TEB", "Ar"], ["Ar"], ["H2"], ["Ar"]],
-    "times"  : [1., 40., 10., 40.],
-    "plasma" : [0, 0, 0, 0]
-    }
-
-recCVD = {
-    "recipe" : "CVD",
-    "initgas": ["H2"],
-    "wait"   : 240,
-    "fingas" : ["H2"],
-    "waitf"  : 1800,
-    "N"      : 1,
-    "Nsteps" : 2,
-    "valves" : [["TEB", "Ar"], ["H2"]],
-    "times"  : [10., 10.],
-    "plasma" : [0, 0]
-    }
-
-recPECVD = {
-    "recipe" : "PECVD",
-    "initgas": ["H2"],
-    "wait"   : 240,
-    "fingas" : ["H2"],
-    "waitf"  : 1800,
-    "N"      : 1,
-    "Nsteps" : 2,
-    "valves" : [["TEB", "Ar"], ["H2"]],
-    "times"  : [10., 10.],
-    "plasma" : [0, 30]
-    }
-
-recPulsedCVD = {
-    "recipe" : "Pulsed CVD",
-    "initgas": ["H2"],
-    "wait"   : 240,
-    "fingas" : ["H2"],
-    "waitf"  : 1800,
-    "N"      : 100,
-    "Nsteps" : 2,
-    "valves" : [["TEB", "Ar"], ["H2"]],
-    "times"  : [10., 40.],
-    "plasma" : [0, 0]
-    }
-
-recPulsedPECVD = {
-    "recipe" : "Pulsed PECVD",
-    "initgas": ["H2"],
-    "wait"   : 240,
-    "fingas" : ["H2"],
-    "waitf"  : 1800,
-    "N"      : 100,
-    "Nsteps" : 3,
-    "valves" : [["TEB", "Ar"], ["H2"], ["H2"]],
-    "times"  : [10., 10., 40.],
-    "plasma" : [0, 30, 0]
-    }
-
-recPurge = {
-    "recipe" : "Purge",
-    "initgas": ["Ar"],
-    "wait"   : 0,
-    "fingas" : ["Ar"],
-    "waitf"  : 1,
-    "N"      : 1,
-    "Nsteps" : 1,
-    "valves" : [["TEB", "Ar"]],
-    "times"  : [180.],
-    "plasma" : [0]
-    }
 
 # IP Address of the Cito Plus RF generator, connected by Ethernet
 # cito_address = "169.254.1.1"
@@ -158,18 +63,18 @@ if 'cycle_time' not in st.session_state:
 
 def turn_ON(gas):
     """
-    Switch relay from the board to turn ON gas (check if valve is NO or NC)
+    Switch relay from the board to turn ON gas
     """
-    relnum, state = relays[gas]
-    relayboard[relnum] = True if state == "NC" else False
+    relnum = relays[gas]
+    relayboard[relnum] = True
 
 
 def turn_OFF(gas):
     """
-    Switch relay from the board to turn OFF gas (check if valve is NO or NC)
+    Switch relay from the board to turn OFF gas
     """
-    relnum, state = relays[gas]
-    relayboard[relnum] = True if state == "NO" else False
+    relnum = relays[gas]
+    relayboard[relnum] = False
 
 
 # # # # # # # # # # # # # # # # # # # # # # 
@@ -346,10 +251,10 @@ def showgraph(initgas=sorted(relays.keys())[0], wait=30, plasma=[10.], valves=so
     """
     initgasclean = ' + '.join(initgas)
     if initgasclean == "":
-        initgasclean = "_**No Input Gas**_"
+        initgasclean = "**_No Input Gas_**"
     fingasclean = ' + '.join(fingas)
     if fingasclean == "":
-        fingasclean = "_**No Input Gas**_"
+        fingasclean = "**_No Input Gas_**"
     stepslog  = [f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**0 &bull; Initialization:** &nbsp;&nbsp;&nbsp;&nbsp;**{initgasclean}** – {wait} s<br>"]
     pl = [f" – <b>Plasma {pl} W</b>" for pl in plasma]
     pl = [p.replace(" – <b>Plasma 0 W</b>", "") for p in pl]
