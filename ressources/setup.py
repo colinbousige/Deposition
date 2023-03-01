@@ -2,11 +2,11 @@ import streamlit as st
 import time
 from datetime import datetime, timedelta
 from dateutil import parser
-import ressources.citobase as cb
 from tempfile import mkstemp
 from shutil import move, copymode
 import os
 import pyhid_usb_relay
+from ressources.config import *
 
 st.set_page_config(
     page_title="ALD – CVD Process",
@@ -25,29 +25,6 @@ st.set_page_config(
     }
 )
 
-# # # # # # # # # # # # # # # # # # # # # # # #
-# Define default variables and relays
-# # # # # # # # # # # # # # # # # # # # # # # #
-
-# Relays from the USB relay board
-relayboard = pyhid_usb_relay.find()
-# relayboard = [0,1,2,3,4]
-
-# Relays attribution, state
-relays = {
-    "TEB": 4,
-    "H2":  3,
-    "Ar":  2
-}
-
-# IP Address of the Cito Plus RF generator, connected by Ethernet
-# cito_address = "169.254.1.1"
-# citoctrl = cb.CitoBase(host_mode = 0, host_addr = cito_address) # 0 for Ethernet
-
-# Address of the Cito Plus RF generator, connected by RS232->USB
-cito_address = "/dev/ttyUSB0"
-citoctrl = cb.CitoBase(host_mode = 1, host_addr = cito_address)
-
 # For writing into the log at the end of the recipe, 
 # whether it's a normal or forced ending
 if 'logname' not in st.session_state:
@@ -60,6 +37,9 @@ if 'cycle_time' not in st.session_state:
 # # # # # # # # # # # # # # # # # # # # # # 
 # Functions handling gas lines
 # # # # # # # # # # # # # # # # # # # # # # 
+
+# Relays from the USB relay board
+relayboard = pyhid_usb_relay.find()
 
 def turn_ON(gas):
     """
