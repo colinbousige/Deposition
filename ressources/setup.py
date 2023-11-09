@@ -45,16 +45,16 @@ def turn_ON(gas):
     """
     Switch relay from the board to turn ON gas
     """
-    relnum = relays[gas]
-    relayboard[relnum] = True
+    relnum, state = relays[gas]
+    relayboard[relnum] = True if state == 'NC' else False
 
 
 def turn_OFF(gas):
     """
     Switch relay from the board to turn OFF gas
     """
-    relnum = relays[gas]
-    relayboard[relnum] = False
+    relnum, state = relays[gas]
+    relayboard[relnum] = False if state == 'NC' else True
 
 
 # # # # # # # # # # # # # # # # # # # # # # 

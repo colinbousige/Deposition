@@ -5,9 +5,9 @@ import ressources.citobase as cb
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 relays = {
-    "TEB": 4,
-    "H2" : 3,
-    "Ar" : 2
+    "TEB": (4,'NC'),# Normally Closed
+    "H2" : (3,'NC'),# Normally Closed
+    "Ar" : (2,'NO') # Normally Opened
 }
 
 
