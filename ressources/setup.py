@@ -332,8 +332,11 @@ def Recipe(valves=sorted(relays.keys())[0], times=[10.], plasma=[0], N=100, reci
                                 unsafe_allow_html=True)
             remcyclebar.progress(int((i+1)/N*100))
             # Steps
-            for v in valves[step]:
-                turn_ON(v)
+            for gas in sorted(relays.keys()):
+                if gas not in valves[step]:
+                    turn_OFF(gas)
+                else:
+                    turn_ON(gas)    
             if plasma[step]>0:
                 set_plasma(plasma[step])
                 HV_ON()
